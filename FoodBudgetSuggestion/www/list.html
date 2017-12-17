@@ -21,21 +21,45 @@
             <header class="mdl-layout__header">
                 <div class="mdl-layout__header-row">
                 <!-- Title -->
-                <span class="mdl-layout-title">Title</span>
+                <span class="mdl-layout-title">Food Budget Suggestion</span>
                 </div>
                 <!-- Tabs -->
                 <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
-                <a href="#fixed-tab-1" class="mdl-layout__tab is-active">Tab 1</a>
-                <a href="#fixed-tab-2" class="mdl-layout__tab">Tab 2</a>
-                <a href="#fixed-tab-3" class="mdl-layout__tab">Tab 3</a>
+                <a href="#fixed-tab-1" class="mdl-layout__tab is-active">List</a>
+                <a href="#fixed-tab-2" class="mdl-layout__tab">Selected</a>
+                <a href="#fixed-tab-3" class="mdl-layout__tab">Total Amount</a>
                 </div>
             </header>
             <div class="mdl-layout__drawer">
-                <span class="mdl-layout-title">Title</span>
+                <span class="mdl-layout-title">Dashboard</span>
             </div>
             <main class="mdl-layout__content">
                 <section class="mdl-layout__tab-panel is-active" id="fixed-tab-1">
-                <div class="page-content"><!-- Your content goes here --></div>
+                <div class="page-content">
+                    <!-- Your content goes here -->
+                    <div class="page-content"><!-- Your content goes here -->
+                        <div class='design-kunuhay'>
+                            <label for="initial-budget">Initial Budget: <span id='initial-budget'></span></label>
+                            <br><br>
+                            <label for="price">Price: <span id='priceValue'></span></label>
+                            <br><br>
+                            <button id='clear' onclick="clear()">Clear</button>
+                        </div>
+                        <center style="margin-top: 50px; margin-left: 20px; margin-right: 20px;">
+                            <!-- Your content goes here -->
+                            <table class="mdl-data-table mdl-data-table--selectable mdl-shadow--2dp" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th class="mdl-data-table__cell--non-numeric"><center>Items</center></th>
+                                        <th><center>Unit price</center></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="table">
+                                    </tbody>
+                                </table>
+                        </center>
+                    </div>
+                </div>
                 </section>
                 <section class="mdl-layout__tab-panel" id="fixed-tab-2">
                 <div class="page-content"><!-- Your content goes here --></div>
@@ -48,6 +72,62 @@
         </div>
         <script type="text/javascript" src="js/firebase.js"></script>
         <script>
+
+            var items = [];
+            var input;
+            var selectItems = [];
+            var selectPrice = [];
+            var tempBudget = 0;
+            var selectItem = "";
+            var initialBudget = 0;
+            var budget = 500;
+            var temp = 0, total = 0;
+
+            var database = firebase.database();
+            var ref = database.ref('items');
+            var sel = database.ref('selected');
+            var rootRef = database.ref();
+
+            readData();
+
+            function selectRow(x) {
+                console.log(items[x.rowIndex-1].price);
+                total = total + items[x.rowIndex-1].price;
+                temp = budget - total;
+                if(selectPrice.push(items[x.rowIndex-1].price)){
+                    readData();
+                    console.log('success kaayo!');
+                    console.log('total ' + temp);
+                    document.getElementById('priceValue').innerText = total;
+                }
+            }
+
+            function readData() {
+                var read = rootRef.child('items').orderByChild('price').endAt(500);   
+
+                read.on('child_added', snap => {
+                    
+                    let name = snap.child('name').val();
+                    let price = snap.child('price').val();
+
+                    
+                    let tableRow = "<tr onclick='selectRow(this)'>";
+                    tableRow += "<td id='selectedItem'><span><center>"+ name +"</center></span></td>";
+                    tableRow += "<td id='selectedPrice'><center>" + price + "</center></td></tr>";
+                
+                    $('#table').append(tableRow);
+                
+                    var data = {name, price};
+                    
+                    if(items.push(data)){
+                    console.log("Success");
+                    }else {
+                    console.log("Failed");
+                    }
+                });
+            }
+
+
             window.onload = function(){
                 var url = document.location.href, 
                     params = url.split('?')[1].split('&'),
@@ -58,7 +138,7 @@
                     tmp = params[i].split('=');
                     data[tmp[0]] = tmp[1];
                 }
-                document.getElementById('out').innerHTML = data.budget;
+                document.getElementById('initial-budget').innerHTML = data.budget;
             
             }
         </script>
